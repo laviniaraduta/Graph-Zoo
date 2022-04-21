@@ -31,7 +31,7 @@ fromComponents :: Ord a
                => [a]              -- lista nodurilor
                -> [(a, a)]         -- lista arcelor
                -> StandardGraph a  -- graful construit
-fromComponents ns es = undefined
+fromComponents ns es = (S.fromList ns, S.fromList es)
 
 {-
     *** TODO ***
@@ -39,7 +39,7 @@ fromComponents ns es = undefined
     Mulțimea nodurilor grafului.
 -}
 nodes :: StandardGraph a -> S.Set a
-nodes = undefined
+nodes = fst
 
 {-
     *** TODO ***
@@ -47,7 +47,7 @@ nodes = undefined
     Mulțimea arcelor grafului.
 -}
 edges :: StandardGraph a -> S.Set (a, a)
-edges = undefined
+edges = snd
 
 {-
     Exemple de grafuri
@@ -78,7 +78,7 @@ shouldBeTrue = graph1 == graph2
     fromList [2,3,4]
 -}
 outNeighbors :: Ord a => a -> StandardGraph a -> S.Set a
-outNeighbors node graph = undefined
+outNeighbors node graph = S.map snd $ S.filter ((== node) . fst) (edges graph)
 
 {-
     *** TODO ***
@@ -91,7 +91,7 @@ outNeighbors node graph = undefined
     fromList [4]
 -}
 inNeighbors :: Ord a => a -> StandardGraph a -> S.Set a
-inNeighbors node graph = undefined
+inNeighbors node graph = S.map fst $ S.filter ((== node) . snd) (edges graph)
 
 {-
     *** TODO ***
@@ -105,7 +105,15 @@ inNeighbors node graph = undefined
     (fromList [2,3,4],fromList [(2,3)])
 -}
 removeNode :: Ord a => a -> StandardGraph a -> StandardGraph a
-removeNode node graph = undefined
+removeNode node graph =
+    if S.notMember node (fst graph)
+        then
+            graph
+        else
+            (S.filter (/= node) (nodes graph),
+            S.filter (\pair -> ((fst pair) /= node) && ((snd pair) /= node)) (edges graph))
+            -- S.difference (edges graph) (S.union (inNeighbors node graph) (outNeighbors node graph)))
+
 
 {-
     *** TODO ***
