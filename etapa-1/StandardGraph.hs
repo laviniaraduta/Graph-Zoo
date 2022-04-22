@@ -159,4 +159,18 @@ mergeNodes :: Ord a
            -> a                -- noul nod
            -> StandardGraph a  -- graful existent
            -> StandardGraph a  -- graful obținut
-mergeNodes prop node graph = undefined
+mergeNodes prop node graph = (newNodes, newEdges) where
+    newNodes = if (S.filter (\x -> (prop x)) (nodes graph)) == S.empty
+        then nodes graph
+        else S.fromList ((S.toList (S.filter (\x -> not (prop x)) (nodes graph))) ++ [node])
+
+    nodesWithProp = S.filter prop (nodes graph) 
+    newEdges = S.map (\pair ->
+        if S.member (fst pair) nodesWithProp && S.member (snd pair) nodesWithProp
+            then (node, node)
+        else if S.member (fst pair) nodesWithProp
+            then (node, snd pair)
+        else if S.member (snd pair) nodesWithProp
+            then (fst pair, node)
+        else
+            pair) (edges graph)
