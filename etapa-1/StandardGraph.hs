@@ -126,20 +126,28 @@ removeNode node graph =
 
     > splitNode 2 [5,6] graph3
     (fromList [1,3,4,5,6],fromList [(1,3),(1,4),(1,5),(1,6),(4,1),(5,3),(6,3)])
+
+    graph3 = fromComponents [1, 2, 3, 4] [(1, 2), (1, 4), (4, 1), (2, 3), (1, 3)]
 -}
 splitNode :: Ord a
           => a                -- nodul divizat
           -> [a]              -- nodurile cu care este înlocuit
           -> StandardGraph a  -- graful existent
           -> StandardGraph a  -- graful obținut
-splitNode old news graph = undefined
-
+splitNode old news graph = (newNodes, newEdges) where
+    newNodes = S.fromList (S.toList (S.filter (/= old) (nodes graph)) ++ news)
+    ins = inNeighbors old graph
+    outs = outNeighbors old graph
+    rest = S.filter (\pair -> ((fst pair) /= old) && ((snd pair) /= old)) (edges graph)
+    newEdges = S.fromList ((S.toList (S.cartesianProduct (S.fromList news) outs)) ++ (S.toList (S.cartesianProduct ins (S.fromList news))) ++ S.toList rest)
 {-
     *** TODO ***
 
     Îmbină mai multe noduri într-unul singur, pe baza unei proprietăți
     respectate de nodurile îmbinate, cu eliminarea acestora. Arcele în care
     erau implicate vechile noduri vor referi nodul nou.
+
+    graph3 = fromComponents [1, 2, 3, 4] [(1, 2), (1, 4), (4, 1), (2, 3), (1, 3)]
 
     Exemplu:
 
