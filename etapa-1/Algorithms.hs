@@ -31,7 +31,14 @@ search :: Ord a
        -> a                    -- nodul de pornire
        -> Graph a              -- graful
        -> [a]                  -- lista obținută în urma parcurgerii
-search f node graph = undefined
+search f node graph = node : helper (f [node] (S.toList (outNeighbors node graph))) f graph [node] where
+helper structure f graph visited =
+    if null structure then
+        []
+    else if not (elem (head structure) visited)
+        then (head structure) : helper (f (tail structure) (S.toList (outNeighbors (head structure) graph))) f graph ((head structure) : visited)
+    else
+        helper (tail structure) f graph visited
 
 {-
     *** TODO ***
@@ -47,7 +54,8 @@ search f node graph = undefined
     [4,1,2,3]
 -}
 bfs :: Ord a => a -> Graph a -> [a]
-bfs = undefined
+bfs = search f where
+    f list1 list2 = list1 ++ list2
 
 {-
     *** TODO ***
@@ -63,7 +71,8 @@ bfs = undefined
     [4,1,2,3]
 -}
 dfs :: Ord a => a -> Graph a -> [a]
-dfs = undefined
+dfs = search f where
+    f list1 list2 = list2 ++ list1
 
 {-
     *** TODO ***
