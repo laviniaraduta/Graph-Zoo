@@ -32,13 +32,15 @@ search :: Ord a
        -> Graph a              -- graful
        -> [a]                  -- lista obținută în urma parcurgerii
 search f node graph = node : helper (f [node] (S.toList (outNeighbors node graph))) f graph [node] where
-helper structure f graph visited =
-    if null structure then
-        []
-    else if not (elem (head structure) visited)
-        then (head structure) : helper (f (tail structure) (S.toList (outNeighbors (head structure) graph))) f graph ((head structure) : visited)
-    else
-        helper (tail structure) f graph visited
+    helper structure f graph visited =
+        if null structure
+            then
+                []
+            else if not (elem (head structure) visited)
+                then
+                    (head structure) : helper (f (tail structure) (S.toList (outNeighbors (head structure) graph))) f graph ((head structure) : visited)
+                else
+                    helper (tail structure) f graph visited
 
 {-
     *** TODO ***
@@ -102,10 +104,29 @@ dfs = search f where
     Nothing
 
     Aici nu există cale între 3 și 1.
+
+    caut de la 2 la 4
+    1 2 3 4 5
+    1   2 3 4 5
+        2 3      4 5
 -}
 countIntermediate :: Ord a
                   => a                 -- nodul sursă
                   -> a                 -- nodul destinație
                   -> StandardGraph a   -- graful
                   -> Maybe (Int, Int)  -- numărul de noduri expandate de BFS/DFS
-countIntermediate from to graph = undefined
+countIntermediate from to graph = 
+    if null (result dfs)
+        then
+            Nothing
+        else 
+            Just ((length (result bfs)) - 1, (length (result dfs)) - 1) where
+                result search =
+                    if not (elem to (snd (span (/= from) (search from graph))))
+                        then
+                            []
+                        else
+                            fst $ span (/= to) $ snd $ span (/= from) (search from graph)
+
+
+
