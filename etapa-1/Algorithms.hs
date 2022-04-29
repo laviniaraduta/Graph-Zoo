@@ -33,13 +33,17 @@ search :: Ord a
        -> [a]                  -- lista obținută în urma parcurgerii
 search f node graph = node : helper (f [node] (S.toList (outNeighbors node graph))) f graph [node] where
     helper structure f graph visited =
+        -- cat timp coada/stiva nu e goala
         if null structure
             then
                 []
             else if not (elem (head structure) visited)
                 then
+                    -- daca elementul din coada/stiva nu a fost deja vizitat, il adaug la rezultat
+                    -- si adau vecinii lui in coada/stiva
                     (head structure) : helper (f (tail structure) (S.toList (outNeighbors (head structure) graph))) f graph ((head structure) : visited)
                 else
+                    -- daca a fost vizitat nu-l mai adaug si nici vecinii nu-i mai adaug
                     helper (tail structure) f graph visited
 
 {-
@@ -116,6 +120,7 @@ countIntermediate :: Ord a
                   -> StandardGraph a   -- graful
                   -> Maybe (Int, Int)  -- numărul de noduri expandate de BFS/DFS
 countIntermediate from to graph = 
+    -- daca dfs nu merge, inseamna ca nici bfs nu o sa mearga
     if null (result dfs)
         then
             Nothing
