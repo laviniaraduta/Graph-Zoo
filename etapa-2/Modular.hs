@@ -31,8 +31,16 @@ type Partition a = S.Set (S.Set a)
     [[11,2,3],[1,12,3],[1,2,13]]
 -}
 mapSingle :: (a -> a) -> [a] -> [[a]]
-mapSingle f xs = undefined
-
+-- mapSingle f xs = [foldl (\acc x -> acc ++ (foldl (\acc1 x1 -> if x1 == x then (f x1) : acc1 else x1 : acc1) [] xs) ) [] xs]
+mapSingle f xs = reverse $ foldl (\acc x -> ((firtsPart (1 + length acc) xs) ++ [(f x)] ++ (secondPart (1 + length acc) xs)) : acc) [] xs
+                    where
+                        firtsPart n xs = if (null (fst (splitAt n xs)))
+                            then []
+                            else init (fst (splitAt n xs))
+                        secondPart n xs = if (null (snd (splitAt n xs)))
+                            then []
+                            else (snd (splitAt n xs))
+-- mapSingle f xs = 
 {-
     *** TODO ***
 
@@ -59,4 +67,6 @@ mapSingle f xs = undefined
     [[[1],[2],[3]],[[1,2],[3]],[[2],[1,3]],[[1],[2,3]],[[1,2,3]]]
 -}
 partitions :: [a] -> [[[a]]]
-partitions xs = undefined
+partitions [] = [[]]
+partitions (x : xs) = [ys | zs <- partitions xs, ys <- mapSingle (x :) zs] ++ [[x] : p | p <- partitions xs]
+  

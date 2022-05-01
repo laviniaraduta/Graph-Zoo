@@ -1,7 +1,7 @@
 module TestPP 
   ( quickCheck, vmCheck, vmCheckIO
-  , testCond, testVal, testManually, testSet
-  , testCondW, testValW, testManuallyW, testSetW
+  , testCond, testVal, testManually, testSet, testWith
+  , testCondW, testValW, testManuallyW, testSetW, testWithW
   , test, test_, tests, tests_
   , TestData, TestCase
   ) where

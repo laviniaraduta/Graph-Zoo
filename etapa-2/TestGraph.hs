@@ -6,6 +6,7 @@ import TestPP
 import qualified Data.Set as S
 import AlgebraicGraph
 import Modular
+import Data.Function (on)
 
 
 testGraph1 :: AlgebraicGraph Int
@@ -230,10 +231,15 @@ testMapSingle = tests 8 10
 testPartitions :: TestData
 testPartitions = tests 9 10
     [
-        testSet "test partitions 1" [[[1]]] (partitions [1]),
-        testSet "test partitions 2" [[[1],[2]],[[1,2]]] (partitions [1,2]),
-        testSet "test partitions 3" [[[1],[2],[3]],[[1,2],[3]],[[2],[1,3]],[[1],[2,3]],[[1,2,3]]] (partitions [1,2,3])
+        testWith "test partitions 1" "valoarea" "coincide" [[[1]]] f (partitions [1]),
+        testWith "test partitions 2" "valoarea" "coincide" [[[1],[2]],[[1,2]]] f (partitions [1,2]),
+        testWith "test partitions 3" "valoarea" "coincide" [[[1],[2],[3]],[[1,2],[3]],[[2],[1,3]],[[1],[2,3]],[[1,2,3]]] f (partitions [1,2,3])
     ]
+    where
+        f = (==) `on` toSets
+
+toSets :: Ord a => [[[a]]] -> S.Set (S.Set (S.Set a))
+toSets = S.fromList . map (S.fromList . map S.fromList)
 
 checkAll = vmCheck $ algebraicGraph ++ modular
     where

@@ -88,7 +88,19 @@ inNeighbors node (Connect g1 g2) = if S.member node (nodes g2)
     parametrul graph se modifică.
 -}
 removeNode :: Eq a => a -> AlgebraicGraph a -> AlgebraicGraph a
-removeNode node graph = undefined
+removeNode node graph = case graph of
+    Empty -> Empty
+    (Node a) -> if node == a then Empty else (Node a)
+    (Overlay g1 g2) -> Overlay (remove g1) (remove g2)
+    (Connect g1 g2) -> Connect (remove g1) (remove g2)
+    where remove = removeNode node
+
+-- removeNode node Empty = Empty
+-- removeNode node (Node a) = if node == a then Empty else (Node a)
+-- removeNode node (Overlay g1 g2) = Overlay (removeNode node g1) (removeNode node g2)
+-- removeNode node (Connect g1 g2) = Connect (removeNode node g1) (removeNode node g2)
+
+
 
 {-
     *** TODO ***
@@ -104,7 +116,24 @@ splitNode :: Eq a
           -> [a]               -- nodurile cu care este înlocuit
           -> AlgebraicGraph a  -- graful existent
           -> AlgebraicGraph a  -- graful obținut
-splitNode old news graph = undefined
+splitNode old news graph = case graph of
+    Empty -> Empty
+    (Node a) -> if old == a
+        then
+            foldl (\acc x -> Overlay acc (Node x)) Empty news
+        else 
+            (Node a)
+    (Overlay g1 g2) -> Overlay (split g1) (split g2)
+    (Connect g1 g2) -> Connect (split g1) (split g2)
+    where split = splitNode old news
+
+-- splitNode old news Empty = Empty
+-- splitNode old news (Node a) = if old == a then foldl (\acc x -> Overlay acc (Node x)) Empty news else (Node a)
+-- splitNode old news (Overlay g1 g2) = Overlay (splitNode old news g1) (splitNode old news g2)
+-- splitNode old news (Connect g1 g2) = Connect (splitNode old news g1) (splitNode old news g2)
+
+
+
 
 {-
     *** TODO ***
@@ -119,4 +148,14 @@ mergeNodes :: (a -> Bool)       -- proprietatea îndeplinită de nodurile îmbin
            -> a                 -- noul nod
            -> AlgebraicGraph a  -- graful existent
            -> AlgebraicGraph a  -- graful obținut
-mergeNodes prop node graph = undefined
+mergeNodes prop node graph = case graph of 
+    Empty -> Empty
+    (Node a) -> if (prop a) then (Node node) else (Node a)
+    (Overlay g1 g2) -> Overlay (merge g1) (merge g2)
+    (Connect g1 g2) -> Connect (merge g1) (merge g2)
+    where merge = mergeNodes prop node
+
+-- mergeNodes prop node Empty = Empty
+-- mergeNodes prop node (Node a) = if (prop a) then (Node node) else (Node a)
+-- mergeNodes prop node (Overlay g1 g2) = Overlay (mergeNodes prop node g1) (mergeNodes prop node g2)
+-- mergeNodes prop node (Connect g1 g2) = Connect (mergeNodes prop node g1) (mergeNodes prop node g2)
