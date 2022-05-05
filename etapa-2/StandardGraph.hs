@@ -14,6 +14,17 @@ import qualified Data.Set as S
     type introduce un sinonim de tip, similar cu typedef din C.
 -}
 type StandardGraph a = (S.Set a, S.Set (a, a))
+-- Data StandardGraph a
+--  = Empty 
+--  | Pair S.set a S.set (a, a) 
+
+-- Data StandardGraph a = Graph
+--     { nodes :: S.set a
+--     , edges :: S.set (a, a)
+--     }
+
+-- fromComponents [] [] = Empty
+-- fromComponents ns es = 
 
 {-
     *** TODO ***

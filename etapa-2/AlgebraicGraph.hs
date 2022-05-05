@@ -40,7 +40,12 @@ nodes (Connect g1 g2) = S.union (nodes g1) (nodes g2)
 edges :: Ord a => AlgebraicGraph a -> S.Set (a, a)
 edges Empty = S.empty
 edges (Node a) = S.empty
+
+-- Overlay - cele 2 grafuri nu au muchii comune
 edges (Overlay g1 g2) = S.union (edges g1) (edges g2)
+
+-- Connect - toate nodurile din g1 sunt conectate cu toate nodurile din g2
+-- deci la muchiile care erau in grafurile separate se adauga cele de legatura
 edges (Connect g1 g2) = S.union (S.union (edges g1) (edges g2)) (S.cartesianProduct (nodes g1) (nodes g2))
 
 {-
@@ -54,10 +59,18 @@ edges (Connect g1 g2) = S.union (S.union (edges g1) (edges g2)) (S.cartesianProd
 outNeighbors :: Ord a => a -> AlgebraicGraph a -> S.Set a
 outNeighbors node Empty = S.empty
 outNeighbors node (Node a) = S.empty
-outNeighbors node (Overlay g1 g2) = S.union (outNeighbors node g2) (outNeighbors node g1)
-outNeighbors node (Connect g1 g2) = if S.member node (nodes g1) 
-    then S.union (nodes g2) (S.union (outNeighbors node g1) (outNeighbors node g2))
-    else S.union (outNeighbors node g2) (outNeighbors node g1)
+
+-- desi este overlay intre g1 si g2 este posibil sa avem noduri care se afla in ambele grafuri
+outNeighbors node (Overlay g1 g2) = S.union (outNeighbors node g1) (outNeighbors node g2)
+
+-- chiar daca este connect intre g1 si g2 pot exista noduri in ambele grafuri
+-- daca nodul este in g1 se stie ca toate nodurile din g2 sunt outNeighs
+outNeighbors node (Connect g1 g2) =
+    if S.member node (nodes g1) 
+        then
+            S.union (nodes g2) (S.union (outNeighbors node g1) (outNeighbors node g2))
+        else
+            S.union (outNeighbors node g2) (outNeighbors node g1)
 
 {-
     *** TODO ***
@@ -70,10 +83,13 @@ outNeighbors node (Connect g1 g2) = if S.member node (nodes g1)
 inNeighbors :: Ord a => a -> AlgebraicGraph a -> S.Set a
 inNeighbors node Empty = S.empty
 inNeighbors node (Node a) = S.empty
-inNeighbors node (Overlay g1 g2) = S.union (inNeighbors node g2) (inNeighbors node g1)
-inNeighbors node (Connect g1 g2) = if S.member node (nodes g2) 
-    then S.union (nodes g1) (S.union (inNeighbors node g1) (inNeighbors node g2))
-    else S.union (inNeighbors node g2) (inNeighbors node g1)
+inNeighbors node (Overlay g1 g2) = S.union (inNeighbors node g1) (inNeighbors node g2)
+inNeighbors node (Connect g1 g2) =
+    if S.member node (nodes g2) 
+        then
+            S.union (nodes g1) (S.union (inNeighbors node g1) (inNeighbors node g2))
+        else
+            S.union (inNeighbors node g2) (inNeighbors node g1)
 
 {-
     *** TODO ***
@@ -93,14 +109,7 @@ removeNode node graph = case graph of
     (Node a) -> if node == a then Empty else (Node a)
     (Overlay g1 g2) -> Overlay (remove g1) (remove g2)
     (Connect g1 g2) -> Connect (remove g1) (remove g2)
-    where remove = removeNode node
-
--- removeNode node Empty = Empty
--- removeNode node (Node a) = if node == a then Empty else (Node a)
--- removeNode node (Overlay g1 g2) = Overlay (removeNode node g1) (removeNode node g2)
--- removeNode node (Connect g1 g2) = Connect (removeNode node g1) (removeNode node g2)
-
-
+    where remove = removeNode node -- mai astepta un parametru
 
 {-
     *** TODO ***
@@ -127,12 +136,11 @@ splitNode old news graph = case graph of
     (Connect g1 g2) -> Connect (split g1) (split g2)
     where split = splitNode old news
 
+-- initial am facut cu pattern matching
 -- splitNode old news Empty = Empty
 -- splitNode old news (Node a) = if old == a then foldl (\acc x -> Overlay acc (Node x)) Empty news else (Node a)
 -- splitNode old news (Overlay g1 g2) = Overlay (splitNode old news g1) (splitNode old news g2)
 -- splitNode old news (Connect g1 g2) = Connect (splitNode old news g1) (splitNode old news g2)
-
-
 
 
 {-
@@ -155,6 +163,7 @@ mergeNodes prop node graph = case graph of
     (Connect g1 g2) -> Connect (merge g1) (merge g2)
     where merge = mergeNodes prop node
 
+-- cu pattern matching
 -- mergeNodes prop node Empty = Empty
 -- mergeNodes prop node (Node a) = if (prop a) then (Node node) else (Node a)
 -- mergeNodes prop node (Overlay g1 g2) = Overlay (mergeNodes prop node g1) (mergeNodes prop node g2)

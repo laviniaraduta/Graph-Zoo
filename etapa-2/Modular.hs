@@ -30,12 +30,16 @@ type Partition a = S.Set (S.Set a)
     > mapSingle (+10) [1,2,3]
     [[11,2,3],[1,12,3],[1,2,13]]
 -}
+
+-- trebuie sa impart multimea in 2 parti si sa pun elementul pe care se aplica f intre ele
 mapSingle :: (a -> a) -> [a] -> [[a]]
 mapSingle f xs = reverse $ foldl (\acc x -> ((firtsPart (1 + length acc) xs) ++ [(f x)] ++ (secondPart (1 + length acc) xs)) : acc) [] xs
                     where
+                        -- extrage lista cu primele n elemente din xs
                         firtsPart n xs = if (null (fst (splitAt n xs)))
                             then []
                             else init (fst (splitAt n xs))
+                        -- extrage lista cu ultimele n elemente din xs
                         secondPart n xs = if (null (snd (splitAt n xs)))
                             then []
                             else (snd (splitAt n xs)) 
