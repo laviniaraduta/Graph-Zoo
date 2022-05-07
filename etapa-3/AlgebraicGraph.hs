@@ -24,7 +24,10 @@ triangle = Connect (Node 1) (Connect (Node 2) (Node 3))
     Hint: S.union
 -}
 nodes :: Ord a => AlgebraicGraph a -> S.Set a
-nodes graph = undefined
+nodes Empty = S.empty
+nodes (Node a) = S.insert a S.empty
+nodes (Overlay g1 g2) = S.union (nodes g1) (nodes g2)
+nodes (Connect g1 g2) = S.union (nodes g1) (nodes g2)
 
 {-
     *** TODO ***
@@ -34,7 +37,15 @@ nodes graph = undefined
     Hint: S.union, S.cartesianProduct
 -}
 edges :: Ord a => AlgebraicGraph a -> S.Set (a, a)
-edges graph = undefined
+edges Empty = S.empty
+edges (Node a) = S.empty
+
+-- Overlay - cele 2 grafuri nu au muchii comune
+edges (Overlay g1 g2) = S.union (edges g1) (edges g2)
+
+-- Connect - toate nodurile din g1 sunt conectate cu toate nodurile din g2
+-- deci la muchiile care erau in grafurile separate se adauga cele de legatura
+edges (Connect g1 g2) = S.union (S.union (edges g1) (edges g2)) (S.cartesianProduct (nodes g1) (nodes g2))
 
 {-
     *** TODO ***
@@ -45,7 +56,20 @@ edges graph = undefined
     prea multe muchii inutile.
 -}
 outNeighbors :: Ord a => a -> AlgebraicGraph a -> S.Set a
-outNeighbors node graph = undefined
+outNeighbors node Empty = S.empty
+outNeighbors node (Node a) = S.empty
+
+-- desi este overlay intre g1 si g2 este posibil sa avem noduri care se afla in ambele grafuri
+outNeighbors node (Overlay g1 g2) = S.union (outNeighbors node g1) (outNeighbors node g2)
+
+-- chiar daca este connect intre g1 si g2 pot exista noduri in ambele grafuri
+-- daca nodul este in g1 se stie ca toate nodurile din g2 sunt outNeighs
+outNeighbors node (Connect g1 g2) =
+    if S.member node (nodes g1) 
+        then
+            S.union (nodes g2) (S.union (outNeighbors node g1) (outNeighbors node g2))
+        else
+            S.union (outNeighbors node g2) (outNeighbors node g1)
 
 {-
     *** TODO ***
@@ -56,7 +80,15 @@ outNeighbors node graph = undefined
     prea multe muchii inutile.
 -}
 inNeighbors :: Ord a => a -> AlgebraicGraph a -> S.Set a
-inNeighbors node graph = undefined
+inNeighbors node Empty = S.empty
+inNeighbors node (Node a) = S.empty
+inNeighbors node (Overlay g1 g2) = S.union (inNeighbors node g1) (inNeighbors node g2)
+inNeighbors node (Connect g1 g2) =
+    if S.member node (nodes g2) 
+        then
+            S.union (nodes g1) (S.union (inNeighbors node g1) (inNeighbors node g2))
+        else
+            S.union (inNeighbors node g2) (inNeighbors node g1)
 
 {-
     *** TODO ***
@@ -79,9 +111,9 @@ inNeighbors node graph = undefined
     Connect (Node 1) (Overlay (Node 2) (Node 3))
 -}
 instance Num a => Num (AlgebraicGraph a) where
-    fromInteger = undefined
-    (+) = undefined
-    (*) = undefined
+    fromInteger n = Node (fromInteger n)
+    (+) = Overlay
+    (*) = Connect
 
 {-
     *** TODO ***
@@ -100,7 +132,11 @@ instance Num a => Num (AlgebraicGraph a) where
     (1*(2+3))
 -}
 instance Show a => Show (AlgebraicGraph a) where
-    show graph = undefined
+    show Empty = ""
+    show (Node value) = show value
+    show (Overlay g1 g2) = "(" ++ show g1 ++ "+" ++ show g2 ++ ")"
+    show (Connect g1 g2) = "(" ++ show g1 ++ "*" ++ show g2 ++ ")"
+    
 
 {-
     *** TODO ***
@@ -127,7 +163,11 @@ instance Show a => Show (AlgebraicGraph a) where
     True
 -}
 instance Ord a => Eq (AlgebraicGraph a) where
-    g1 == g2 = undefined
+    Empty == Empty = True
+    g1 == Empty = False
+    Empty == g2 = False
+    g1 == g2 = (nodes g1) == (nodes g2) && (edges g1) == (edges g2)
+    
 
 {-
     *** TODO ***
@@ -143,7 +183,11 @@ instance Ord a => Eq (AlgebraicGraph a) where
     ((4+5)*(2+3))
 -}
 extend :: (a -> AlgebraicGraph b) -> AlgebraicGraph a -> AlgebraicGraph b
-extend f graph = undefined
+extend f Empty = Empty
+extend f (Node a) = f a
+extend f (Overlay g1 g2) = Overlay (extend f g1) (extend f g2)
+extend f (Connect g1 g2) = Connect (extend f g1) (extend f g2)
+
 
 {-
     *** TODO ***
@@ -159,7 +203,8 @@ splitNode :: Eq a
           -> [a]               -- nodurile cu care este înlocuit
           -> AlgebraicGraph a  -- graful existent
           -> AlgebraicGraph a  -- graful obținut
-splitNode node targets = undefined
+splitNode node targets =  extend (\n -> if n == node then (foldl (\acc x -> Overlay acc (Node x)) Empty targets) else Node n )
+
 
 {-
     *** TODO ***
@@ -177,7 +222,7 @@ splitNode node targets = undefined
 -}
 instance Functor AlgebraicGraph where
     -- fmap :: (a -> b) -> AlgebraicGraph a -> AlgebraicGraph b
-    fmap f graph = undefined
+    fmap f graph = extend (\n -> Node (f n)) graph
 
 {-
     *** TODO ***
@@ -192,7 +237,7 @@ mergeNodes :: (a -> Bool)       -- proprietatea îndeplinită de nodurile îmbin
            -> a                 -- noul nod
            -> AlgebraicGraph a  -- graful existent
            -> AlgebraicGraph a  -- graful obținut
-mergeNodes prop node = undefined
+mergeNodes prop node = fmap (\n -> if (prop n) then node else n)
 
 {-
     *** TODO ***
@@ -210,7 +255,7 @@ mergeNodes prop node = undefined
     fromList [(1,3)]
 -}
 filterGraph :: (a -> Bool) -> AlgebraicGraph a -> AlgebraicGraph a
-filterGraph prop graph = undefined
+filterGraph prop graph = extend (\n -> if not (prop n) then Empty else Node n) graph
 
 {-
     *** TODO ***
@@ -221,4 +266,4 @@ filterGraph prop graph = undefined
     Implementați removeNode folosind filterGraph!
 -}
 removeNode :: Eq a => a -> AlgebraicGraph a -> AlgebraicGraph a
-removeNode node graph = undefined
+removeNode node graph = filterGraph (not . (== node)) graph

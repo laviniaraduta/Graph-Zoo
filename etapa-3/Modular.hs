@@ -33,7 +33,16 @@ type Partition a = S.Set (S.Set a)
     [[11,2,3],[1,12,3],[1,2,13]]
 -}
 mapSingle :: (a -> a) -> [a] -> [[a]]
-mapSingle f xs = undefined
+mapSingle f xs = reverse $ foldl (\acc x -> ((firtsPart (1 + length acc) xs) ++ [(f x)] ++ (secondPart (1 + length acc) xs)) : acc) [] xs
+                    where
+                        -- extrage lista cu primele n elemente din xs
+                        firtsPart n xs = if (null (fst (splitAt n xs)))
+                            then []
+                            else init (fst (splitAt n xs))
+                        -- extrage lista cu ultimele n elemente din xs
+                        secondPart n xs = if (null (snd (splitAt n xs)))
+                            then []
+                            else (snd (splitAt n xs)) 
 
 {-
     *** TODO ***
@@ -61,7 +70,12 @@ mapSingle f xs = undefined
     [[[1],[2],[3]],[[1,2],[3]],[[2],[1,3]],[[1],[2,3]],[[1,2,3]]]
 -}
 partitions :: [a] -> [[[a]]]
-partitions xs = undefined
+partitions [] = [[]]
+partitions (x : xs) = from_tail ++ new_partitions
+        where
+            old_partitions = partitions xs
+            from_tail = [ys | zs <- old_partitions, ys <- mapSingle (x :) zs]
+            new_partitions = [[x] : p | p <- old_partitions]
 
 {-
     *** TODO ***
@@ -96,7 +110,12 @@ isModule :: Ord a
          => S.Set a
          -> Graph a
          -> Bool
-isModule set graph = undefined
+isModule set graph = if S.size (S.map
+    (\node -> (S.filter (\n -> not (S.member n set)) (S.union (inNeighbors node graph) (outNeighbors node graph)))) set) == 1
+    then
+        True
+    else
+        False
 
 {-
     *** TODO ***
@@ -135,7 +154,13 @@ isModularPartition :: Ord a
                    => Partition a
                    -> Graph a
                    -> Bool
-isModularPartition partition graph = undefined
+isModularPartition partition graph = if (S.size result == 1) && (S.member True result)
+    then
+        True
+    else
+        False
+    where
+        result = S.map (\part -> isModule part graph) partition
 
 {-
     *** TODO ***
