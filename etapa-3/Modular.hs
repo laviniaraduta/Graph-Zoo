@@ -110,12 +110,19 @@ isModule :: Ord a
          => S.Set a
          -> Graph a
          -> Bool
-isModule set graph = if S.size (S.map
-    (\node -> (S.filter (\n -> not (S.member n set)) (S.union (inNeighbors node graph) (outNeighbors node graph)))) set) == 1
+isModule set graph =
+    if S.size (inSet) == 1 && S.size (outSet) == 1
     then
         True
     else
         False
+    where
+        -- fiecare nod din setul dat este inlocuit cu setul de noduri in/out
+        -- care nu sunt in multimea data ca parametru.
+        -- daca toate seturile obtinute sunt egale, S.map va produce un set
+        -- cu dimensiunea 1.
+        inSet = S.map (\node -> (S.filter (\n -> not (S.member n set)) (inNeighbors node graph))) set
+        outSet = S.map (\node -> (S.filter (\n -> not (S.member n set)) (outNeighbors node graph))) set
 
 {-
     *** TODO ***
@@ -160,6 +167,8 @@ isModularPartition partition graph = if (S.size result == 1) && (S.member True r
     else
         False
     where
+        -- inlocuiesc fiecare multime din partitie cu rezultatul isModule pe multimea respectiva
+        -- S.map nu retine duplicate, deci daca toate sunt module, in result va fi doar 1 True
         result = S.map (\part -> isModule part graph) partition
 
 {-
@@ -189,7 +198,11 @@ maximalModularPartition :: Ord a
                         => [Partition a]
                         -> Graph a
                         -> Partition a
-maximalModularPartition partitions graph = undefined
+maximalModularPartition partitions graph = 
+    -- filtrez fiecare partitie ca sa fie una modulara si sa aiba dimensiunea > 1
+    minimumBy (compare `on` length)
+        (filter (\part -> (isModularPartition part graph) && (S.size part > 1)) partitions)
+
 
 {-
     Obține descompunerea modulară a unui graf. O puteți utiliza pentru

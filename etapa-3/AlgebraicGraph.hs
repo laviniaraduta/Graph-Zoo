@@ -166,6 +166,7 @@ instance Ord a => Eq (AlgebraicGraph a) where
     Empty == Empty = True
     g1 == Empty = False
     Empty == g2 = False
+    -- compar seturile de noduri si de muchii
     g1 == g2 = (nodes g1) == (nodes g2) && (edges g1) == (edges g2)
     
 
@@ -203,7 +204,15 @@ splitNode :: Eq a
           -> [a]               -- nodurile cu care este înlocuit
           -> AlgebraicGraph a  -- graful existent
           -> AlgebraicGraph a  -- graful obținut
-splitNode node targets =  extend (\n -> if n == node then (foldl (\acc x -> Overlay acc (Node x)) Empty targets) else Node n )
+splitNode node targets =
+    -- daca nodul este cel cautat, se inlocuieste cu un overlay al tuturor targetelor
+    -- daca nu, nu este schimbat
+    extend (\n ->
+        if n == node
+            then
+                foldl (\acc x -> Overlay acc (Node x)) Empty targets
+            else
+                (Node n))
 
 
 {-
@@ -237,6 +246,7 @@ mergeNodes :: (a -> Bool)       -- proprietatea îndeplinită de nodurile îmbin
            -> a                 -- noul nod
            -> AlgebraicGraph a  -- graful existent
            -> AlgebraicGraph a  -- graful obținut
+-- fiecare nod care respecta proprietatea este inlocuit cu noul nod
 mergeNodes prop node = fmap (\n -> if (prop n) then node else n)
 
 {-
@@ -255,6 +265,8 @@ mergeNodes prop node = fmap (\n -> if (prop n) then node else n)
     fromList [(1,3)]
 -}
 filterGraph :: (a -> Bool) -> AlgebraicGraph a -> AlgebraicGraph a
+-- daca nu respecta proprietatea este inlocuit cu Empty
+-- daca nu, este lasat neschimbat
 filterGraph prop graph = extend (\n -> if not (prop n) then Empty else Node n) graph
 
 {-
@@ -266,4 +278,5 @@ filterGraph prop graph = extend (\n -> if not (prop n) then Empty else Node n) g
     Implementați removeNode folosind filterGraph!
 -}
 removeNode :: Eq a => a -> AlgebraicGraph a -> AlgebraicGraph a
+-- filtrez doar nodurile diferite de cel cautat
 removeNode node graph = filterGraph (not . (== node)) graph
