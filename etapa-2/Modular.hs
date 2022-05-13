@@ -32,6 +32,13 @@ type Partition a = S.Set (S.Set a)
 -}
 
 -- trebuie sa impart multimea in 2 parti si sa pun elementul pe care se aplica f intre ele
+-- pe rand, fiecare element din lista initiala se transforma o noua lista
+-- ficare noue lista este formata astfel:
+    -- iau primele n elemente
+    -- pun lista formata din elementul curent pe care aplic functia
+    -- adaug restul elementelor
+-- n este de fapt lungimea acumulatorului, pentru pt a aplica f pe al-n lea element inseamna
+-- ca am format deja primele n -1 liste
 mapSingle :: (a -> a) -> [a] -> [[a]]
 mapSingle f xs = reverse $ foldl (\acc x -> ((firtsPart (1 + length acc) xs) ++ [(f x)] ++ (secondPart (1 + length acc) xs)) : acc) [] xs
                     where

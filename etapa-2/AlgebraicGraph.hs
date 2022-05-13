@@ -103,9 +103,13 @@ inNeighbors node (Connect g1 g2) =
     nemodificați. De exemplu, parametrul node nu se modifică, în timp ce
     parametrul graph se modifică.
 -}
+
+-- singurul parametru care se modifica de la un apel la altul este graful in sine
 removeNode :: Eq a => a -> AlgebraicGraph a -> AlgebraicGraph a
 removeNode node graph = case graph of
     Empty -> Empty
+    -- daca am gasit nodul pe care vreau sa-l elimin doar il inlocuiesc cu Empty
+    -- altfel nu modific nimic
     (Node a) -> if node == a then Empty else (Node a)
     (Overlay g1 g2) -> Overlay (remove g1) (remove g2)
     (Connect g1 g2) -> Connect (remove g1) (remove g2)
@@ -127,6 +131,9 @@ splitNode :: Eq a
           -> AlgebraicGraph a  -- graful obținut
 splitNode old news graph = case graph of
     Empty -> Empty
+    -- daca am gasit nodul pe care vreau sa-l split-uiesc
+    -- trebuie doar sa-l inlocuiesc cu nodurile noi, nu ma intereseaza legaturile intre 
+    -- nodurile noi, asa ca doar le fac overlay
     (Node a) -> if old == a
         then
             foldl (\acc x -> Overlay acc (Node x)) Empty news
@@ -156,6 +163,9 @@ mergeNodes :: (a -> Bool)       -- proprietatea îndeplinită de nodurile îmbin
            -> a                 -- noul nod
            -> AlgebraicGraph a  -- graful existent
            -> AlgebraicGraph a  -- graful obținut
+
+-- trebuie pur si simplu ca atunci cand gasesc un nod care respecta proprietatea sa 
+-- ii inlocuiesc valoarea cu cea noua
 mergeNodes prop node graph = case graph of 
     Empty -> Empty
     (Node a) -> if (prop a) then (Node node) else (Node a)
